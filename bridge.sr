@@ -1,0 +1,55 @@
+# One-lane bridge taking turns w/ semaphores (usage:  a.out num)
+
+resource onelane()
+  var m: int; getarg(1,m)       # read command line argument
+  # declare and initialize channels for semaphores and counters
+  var ns :int := 0, nn :int := 0
+  var ds :int := 0, dn :int := 0
+  sem e := 1, s := 0, n := 0
+
+  process south(i := 1 to m)
+   do true ->
+    nap(int(random(20,8000)));
+    P(e)                                ## try to cross
+    if nn > 0 or (ns > 0 and dn > 0) ->
+      ds++; V(e); P(s)
+    fi
+    ns++                                ## now entering bridge
+    write("south ",i, "on  bridge (S:",ns,",",ds,"; N:",nn,",",dn,")")
+    if ds > 0 and dn = 0 -> ds--; V(s)
+    [] else -> V(e)
+    fi
+    nap(int(random(20,500)));           ## on bridge
+    P(e)                                ## now leaving bridge
+    ns--
+    write("south ",i, "off bridge (S:",ns,",",ds,"; N:",nn,",",dn,")")
+    if dn > 0 and ns = 0 -> dn--; V(n)
+    [] else -> V(e)
+    fi
+   od
+  end
+
+  process north(i := 1 to m)
+   do true ->
+    nap(int(random(20,8000)));          ## try to cross
+    P(e)
+    if ns > 0 or (nn > 0 and ds > 0) ->
+      dn++; V(e); P(n)
+    fi
+    nn++                                ## now entering bridge
+    write("north ",i, "on  bridge (S:",ns,",",ds,"; N:",nn,",",dn,")")
+    if dn > 0 and ds = 0 -> dn--; V(n)
+    [] else -> V(e)
+    fi
+    nap(int(random(20,500)));           ## on bridge
+    P(e)                                ## now leaving bridge
+    nn--
+    write("north ",i, "off bridge (S:",ns,",",ds,"; N:",nn,",",dn,")")
+    if ds > 0 and nn = 0 -> ds--; V(s)
+    [] else -> V(e)
+    fi
+   od
+  end
+end
+
+

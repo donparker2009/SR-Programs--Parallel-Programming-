@@ -1,0 +1,54 @@
+resource matrix_mult()
+  # read command line argument
+  var n: int; getarg(1,n)
+  var p: int; getarg(2,p)
+ # declare and initialize shared arrays
+  var a[n,n],b[n,n],c[n,n] : real
+
+  # declare shows() procedure
+  op shows(x[n,n]: real)
+
+  # input a and b
+  write("Input matrix a one row at a time")
+  fa i := 1 to n ->
+    fa j := 1 to n ->
+      read(a[i,j])
+    af
+  af
+  write()
+  write("Input matrix b one row at a time")
+  fa i := 1 to n ->
+    fa j := 1 to n ->
+      read(b[i,j])
+    af
+  af
+
+  # output a and b matrix
+  shows(a); write(); shows(b); write()
+
+  #Workers
+  process inner(w := 1 to p)
+    var first, last : int
+    first := (w-1)*n/p+1
+    last := first + n/p - 1
+
+    fa i := first to last , j := 1 to n ->
+     var sum := 0.0
+     fa k := 1 to n -> sum +:= a[i,k]*b[k,j] af
+     c[i,j] := sum
+    af
+   end
+
+  # write c matrix
+  final
+  shows(c)
+  end 
+
+  proc shows(c)
+    fa i := 1 to n ->
+      fa j := 1 to n -> writes(c[i,j], " ") af
+        write()
+    af
+  end
+end
+

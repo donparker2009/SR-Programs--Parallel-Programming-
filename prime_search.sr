@@ -1,0 +1,57 @@
+resource primes()
+ var n,p:int; getarg(1,n);getarg(2,p)
+
+# part of the TS lock implementation
+ sem e:=1
+ var lock: bool:=false
+ op TS(var lock: bool) returns bool
+
+# the bag of tasks (up to n)
+ var numbers :=2
+
+process worker(i:=1 to p)
+ var checkNum:int;
+ var isPrime: bool:=true
+
+do true ->
+ #get a task
+ do lock -> next od
+ do TS(lock) -> 
+  do lock -> next od
+ od
+
+ if (numbers >  n) ->
+ lock := false
+ exit
+ fi
+   
+checkNum := numbers
+numbers := numbers + 1
+
+lock := false
+
+isPrime := true
+
+ fa i := 2 to checkNum**(0.5) ->
+  if (checkNum % i = 0) ->
+   isPrime := false
+   exit
+  fi
+ af
+
+if isPrime -> write(checkNum) fi 
+   
+od
+end
+
+#FYI, an implementation of TS(lock) which satisfies
+#the pertinent semantics from the text.
+ proc TS(lock) returns ans
+  P(e)
+  ans:=true
+  if not lock -> ans:=false;lock:=true fi
+  V(e)
+  return
+ end
+end
+

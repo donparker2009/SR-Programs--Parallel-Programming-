@@ -1,0 +1,62 @@
+#grep.sr
+global defs   #shared definitions
+ const MAXPATTERN := 20
+ const MAXFILENAME := 20
+ const MAXLINE := 120
+end
+
+resource grep()
+ import defs
+ var pattern: string[MAXPATTERN];
+ var filename: string[MAXFILENAME];
+
+ #get command line arguments
+ if (getarg(1,pattern)< 1)->
+  write("Usage: grep pattern filename")
+  stop(1)
+ [] (getarg(2, filename)< 1)->
+  write("Usage: grep pattern filename")
+  stop(1)
+ fi
+
+ var fd: file := open(filename, READ)
+
+ if (fd = null) ->
+     write("can not open file ", filename)
+     stop(1)
+ fi
+
+var line[2]: string[MAXLINE]
+var ln := 1
+
+
+procedure find(pattern, line: string[*])
+ var i := 1, plen := length(pattern)
+ do i <= (length(line)-plen + 1) ->
+  if pattern = line[i:i+plen-1] ->
+   write(filename || ":", line); return
+  fi
+  i++
+ od
+end
+
+procedure doread(ln: int) returns result: int
+  result :=read(fd, line[ln])
+ end
+
+ var start := age()
+
+ # find all instances of pattern in filename
+ var result := doread(ln)
+ do result != EOF ->
+  co find(pattern, line[ln])
+  // result := doread(3-ln)
+  oc
+  ln := 3-ln
+ od
+
+
+var finish := age()
+write("execution time is", finish-start)
+
+end
